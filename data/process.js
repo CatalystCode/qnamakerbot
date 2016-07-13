@@ -1,6 +1,7 @@
 function main() {
 
   var lines = 0;
+  var questions = {};
 
   var lineReader = require('readline').createInterface({
     input: require('fs').createReadStream('source_faq.txt')
@@ -12,12 +13,22 @@ function main() {
       return;
     }
     var parts = line.split("\t");
-    var q = parts[1].replace(/:/g, ";");
-    var a = parts[3].replace(/:/g, ";");
-    console.log(q + ":" + a);
+    var q = parts[1].replace(/:/g, ";").replace(/"/g, "").trim();
+    var a = parts[3].replace(/:/g, ";").replace(/"/g, "").trim();
+    if (q in questions) {
+      if (questions[q].length > a.length) {
+        a = questions[q];
+      }
+    }
+
+    questions[q] = a;
   });
 
-
+  lineReader.on('close', function(result) {
+    for (var q in questions) {
+      console.log(q + "\t" + questions[q]);
+    }
+  });
 }
 
 if (require.main === module) {
