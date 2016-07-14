@@ -1,0 +1,24 @@
+{
+  "name": "airbots",
+  "version": "1.0.0",
+  "description": "FAQ Bot for 19th July",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CatalystCode/airbots.git"
+  },
+  "author": "pctuk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CatalystCode/airbots/issues"
+  },
+  "homepage": "https://github.com/CatalystCode/airbots#readme",
+  "dependencies": {
+    "restify": "4.1.1",
+    "botbuilder": "3.0.1"
+  }
+}
