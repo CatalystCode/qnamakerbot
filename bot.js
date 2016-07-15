@@ -32,7 +32,7 @@ intents.onDefault([function (session, args, next) {
             return session.send("Sorry, I have some issues connecting to the remote QnA Maker service...");
         }
         
-        if (result && result.answer) {
+        if (result && result.answer && result.score > 0) {
             if (result.score > scoreThreshHold) {
                 session.send(result.answer);
             }
