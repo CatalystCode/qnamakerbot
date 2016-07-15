@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/CatalystCode/airbots#readme",
   "dependencies": {
-    "restify": "4.1.1",
-    "botbuilder": "3.0.1"
+    "azure-logging": "^0.3.2",
+    "botbuilder": "3.0.1",
+    "restify": "4.1.1"
   }
 }
