@@ -1,5 +1,6 @@
 
 var logging = require('azure-logging');
+var config = require('./config');
 
 /*
  * This module uses azure-logging to encapsulate console.log with a substitute
@@ -23,12 +24,10 @@ function getInstanceId() {
 }
 
 
-// log azure storage account name
-var log_storage_account = process.env.LOG_STORAGE_ACCOUNT;
-//
-// log azure storage acount key
-var log_storage_account_key = process.env.LOG_STORAGE_KEY;
 
+var log_storage_account = config.get('LOG_STORAGE_ACCOUNT');
+var log_storage_account_key = config.get('LOG_STORAGE_KEY');
+var log_enabled = (config.get('LOG_ENABLED') || '').toString().toLowerCase() === 'true';
 
 // this should be outside in a config file
 var config = {
@@ -58,7 +57,7 @@ var config = {
             }
         }],
 
-        enabled: log_storage_account && log_storage_account_key
+        enabled: log_storage_account && log_storage_account_key && log_enabled
       };
 
 module.exports = {

@@ -20,6 +20,8 @@
   "dependencies": {
     "azure-logging": "^0.3.2",
     "botbuilder": "3.0.1",
-    "restify": "4.1.1"
+    "restify": "4.1.1",
+    "nconf": "^0.8.4",
+    "qnamaker-client": "git+https://git@github.com/CatalystCode/qnamaker-client.git"
   }
 }
