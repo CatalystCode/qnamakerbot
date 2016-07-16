@@ -1,6 +1,7 @@
 var builder = require('botbuilder');
 var config = require('./config');
 var QnAClient = require('qnamaker-client').Client;
+var EventHubClient = require('azure-event-hubs').Client;
 
 var opts = {
     appId: config.get('MICROSOFT_APP_ID'),
@@ -17,6 +18,17 @@ var qnaClient = new QnAClient({
 });
 
 var scoreThreshHold = 60;
+var eventHubClient = new EventHubClient.fromConnectionString(config.get("EVENT_HUB_READ_CONFIG"));
+var eventSender = null;
+
+eventHubClient.createSender()
+.then((sender) => {
+  eventSender = sender;
+})
+.catch((e) => {
+  console.warn("Couldn't create event sender");
+  console.warn(e.stack);
+});
 
 //=========================================================
 // Bots Dialogs
@@ -31,16 +43,20 @@ intents.onDefault([function (session, args, next) {
             console.error('Failed to send request to QnAMaker service', err);
             return session.send("Sorry, I have some issues connecting to the remote QnA Maker service...");
         }
-        
+
         var score = parseInt(result.score);
 
         if (score > scoreThreshHold) {
             session.send(result.answer);
         }
         else if (score > 0) {
+            if (eventSender) {
+            }
             session.send("I'm not sure, but the answer might be: " + result.answer);
         }
         else {
+            if (eventSender) {
+            }
             session.send("Sorry, I don't know... :/")
         }
 
@@ -61,3 +77,4 @@ bot.use({
 
 
 module.exports = connector;
+
