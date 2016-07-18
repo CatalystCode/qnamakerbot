@@ -17,7 +17,8 @@ var qnaClient = new QnAClient({
   serviceUrl: config.get('QNA_SERVICE_URL')
 });
 
-var scoreThreshHold = 60;
+var scoreThreshHold = config.get('QNA_SCORE_THRESHHOLD') || 60;
+scoreThreshHold = parseInt(scoreThreshHold);
 
 var eventHubConfig = config.get('EVENT_HUB_READ_CONFIG');
 var eventSender = null;
