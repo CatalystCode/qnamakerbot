@@ -18,17 +18,20 @@ var qnaClient = new QnAClient({
 });
 
 var scoreThreshHold = 60;
-var eventHubClient = new EventHubClient.fromConnectionString(config.get('EVENT_HUB_READ_CONFIG'));
-var eventSender = null;
 
-eventHubClient.createSender()
-.then((sender) => {
-  eventSender = sender;
-})
-.catch((e) => {
-  console.warn('Couldn\'t create event sender');
-  console.warn(e.stack);
-});
+var eventHubConfig = config.get('EVENT_HUB_READ_CONFIG');
+var eventSender = null;
+if (eventHubConfig) {
+  var eventHubClient = new EventHubClient.fromConnectionString(eventHubConfig);
+  eventHubClient.createSender()
+  .then((sender) => {
+    eventSender = sender;
+  })
+  .catch((e) => {
+    console.warn('Couldn\'t create event sender');
+    console.warn(e.stack);
+  });
+}
 
 //=========================================================
 // Bots Dialogs
