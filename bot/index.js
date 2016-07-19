@@ -2,7 +2,9 @@ var builder = require('botbuilder');
 var config = require('../config');
 var EventHubClient = require('azure-event-hubs').Client;
 var prompts = require('./prompts');
-var qna = require('./qna');
+
+var qna = require('./qna')();
+var ba_qna = require('./qna')("BA");
 
 var opts = {
   appId: config.get('MICROSOFT_APP_ID'),
