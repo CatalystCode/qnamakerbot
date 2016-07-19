@@ -20,6 +20,8 @@ function main() {
               a = questions[q];
             }
           }
+          var a = a.replace(/\n/g, "<br/>").trim();
+          var a = a.replace(/\r/g, "").trim();
           questions[q] = a;
         }
       }
@@ -28,8 +30,7 @@ function main() {
   }
 
   for (var q in questions) {
-    //console.log(q + "\t" + questions[q]);
-    console.log(q);// + "\t" + questions[q]);
+    console.log(q + "\t" + questions[q]);
   }
 }
 
