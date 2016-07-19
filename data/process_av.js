@@ -4,7 +4,7 @@ function main() {
   var questions = {};
 
   var lineReader = require('readline').createInterface({
-    input: require('fs').createReadStream('source_faq.txt')
+    input: require('fs').createReadStream('av_faq.txt')
   });
 
   lineReader.on('line', function (line) {
