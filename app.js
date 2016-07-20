@@ -35,6 +35,8 @@ function startBot() {
     console.log('%s listening to %s', server.name, server.url);
   });
 
+  var appInsights = require('./bot/telemetry').appInsights;
+  
   server.pre(function(req, res, next) {
     //console.log('REQUEST:', req.url);
     if (req.method !== 'GET') return next();

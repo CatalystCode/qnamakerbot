@@ -47,4 +47,7 @@ var Telemetry = {
     }
 }
 
-module.exports = Telemetry;
+module.exports = {
+    Telemetry,
+    appInsights
+};
