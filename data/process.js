@@ -3,12 +3,12 @@ var xlsx = require("node-xlsx");
 var striptags = require("striptags");
 var htmlencode = require("htmlencode");
 
-function main() {
+function main(argv) {
 
   var lines = 0;
   var questions = {};
 
-  worksheets = xlsx.parse(fs.readFileSync('ba_faq.xlsx'));
+  worksheets = xlsx.parse(fs.readFileSync(argv[2]));
   for (var worksheet of worksheets) {
     for (var row of worksheet.data) {
       if (lines > 0) {
@@ -37,21 +37,22 @@ function main() {
                 a = questions[q];
               }
             }
+            else {
+              if (meta.introText) {
+                // These are characters that can really ruin our day
+                meta.introText = meta.introText.replace(/“/g, "");
+                meta.introText = meta.introText.replace(/”/g, "");
+                meta.introText = meta.introText.replace(/\r/g, "");
+                meta.introText = meta.introText.replace(/\n/g, "");
+                //console.warn(meta.introText);
+                //console.warn("=====");
+              }
 
-            if (meta.introText) {
-              // These are characters that can really ruin our day
-              meta.introText = meta.introText.replace(/“/g, "");
-              meta.introText = meta.introText.replace(/”/g, "");
-              meta.introText = meta.introText.replace(/\r/g, "");
-              meta.introText = meta.introText.replace(/\n/g, "");
-              //console.warn(meta.introText);
-              //console.warn("=====");
+              a = a.replace(/\n/g, "<br/>").trim();
+              a = a.replace(/\r/g, "").trim();
+              a += "[metadata]" + JSON.stringify(meta) + "[!metadata]";
+              questions[q] = a;
             }
-
-            a = a.replace(/\n/g, "<br/>").trim();
-            a = a.replace(/\r/g, "").trim();
-            a += "[metadata]" + JSON.stringify(meta) + "[!metadata]";
-            questions[q] = a;
           }
         }
       }
@@ -65,5 +66,5 @@ function main() {
 }
 
 if (require.main === module) {
-    main();
+    main(process.argv);
 }
