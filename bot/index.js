@@ -6,7 +6,7 @@ var async = require('async');
 var uuid = require('node-uuid');
 var telemetry = require('./telemetry');
 var DocumentClient = require('documentdb').DocumentClient;
-
+var MetadataClient = require('./metadata').Client;
 var qna = require('./qna')();
 var ba_qna = require('./qna')("BA");
 
@@ -17,6 +17,8 @@ var opts = {
   appId: config.get('MICROSOFT_APP_ID'),
   appPassword: config.get('MICROSOFT_APP_PASSWORD')
 };
+
+var metadataClient = new MetadataClient();
 
 // Create chat bot
 var connector = new builder.ChatConnector(opts);
@@ -66,10 +68,37 @@ catch (e) {
 
 bot.dialog('/', intents);
 
-intents.matches(/^(help|hi)/i, [
+intents.matches(/^(help|hi|hello)/i, [
     function (session) {
         session.send(prompts.helpMessage);
     }
+]);
+
+intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
+  function (session) {
+    var msg = session.message.text;
+
+    tokens = msg.match(/read history ([-a-zA-Z0-9]*)/);
+    var token = null;
+    if ( !tokens || tokens.length <= 1 ) {
+      session.send( "Sorry, you entered an invalid token");
+      return;
+    }
+    token = tokens[1];
+
+    var user = new User( dataDao, "" );
+    user.findUserWithToken( token, function( err, userDoc ) {
+      if ( err ) {
+        console.log( "Error finding user with token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else if ( !userDoc ) {
+        console.log( "Invalid token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else {
+        session.send( JSON.stringify(userDoc.history) );
+      }
+    });
+  }
 ]);
 
 intents.matches(/^(history)/i, [
@@ -119,11 +148,12 @@ intents.matches(/^(get token)/i, [
     }
 ]);
 
-intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
+intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
     function (session) {
       var msg = session.message.text;
+
       // extract out token
-      tokens = msg.match(/use token ([a-zA-Z0-9]*)/);
+      tokens = msg.match(/use token ([-a-zA-Z0-9]*)/);
       var token = null;
       if ( !tokens || tokens.length <= 1 ) {
         session.send( "Sorry, you entered an invalid token");
@@ -132,18 +162,22 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
       token = tokens[1];
 
       var user = new User( dataDao, "" );
-      user.joinWithToken( token, function( err, userDoc ) {
+      user.findUserWithToken( token, function( err, userDoc ) {
         if ( err ) {
-          console.log( "Error joining with token - ", err );
+          console.log( "Error finding user with token - ", err );
           session.send( "Sorry, this token is not valid");
         } else if ( !userDoc ) {
           console.log( "Invalid token - ", err );
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
+<<<<<<< HEAD
           session.send( userDoc.history );
 
            telemetry.trackEvent("custom event", { "TokenUsed" : token});
+=======
+          session.send( JSON.stringify(userDoc.history) );
+>>>>>>> 4614b130780ab79eb8f45d20bdc5a789702ea22f
         }
       });
     }
@@ -253,7 +287,7 @@ function handleQuestion( session, question, callback ) {
     if (err) {
       console.error('Failed to send request to QnAMaker service', err);
       session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
-      callback( err, null);
+      return callback( err, null);
     }
 
     var score = parseInt(result.score);
@@ -261,16 +295,18 @@ function handleQuestion( session, question, callback ) {
     var answer = "";
     if (score > scoreThreshHold) {
       answer = result.answer;
-      session.send(result.answer);
+      sendAnswer({session, answer, origAnswer: answer});
     }
     else if (score > 0) {
       if (eventSender) {
       }
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
-
-      session.send(answer);
-      session.beginDialog('/approve');
+      sendAnswer({session, answer, origAnswer: result.answer}, (err) => {
+        if (!err) {
+          session.beginDialog('/approve');
+        }
+      });
     }
     else {
       if (eventSender) {
@@ -282,4 +318,43 @@ function handleQuestion( session, question, callback ) {
     console.log('question:', question, 'result:', result);
     callback( null, answer );
   });
+}
+
+function sendAnswer(opts, cb) {
+  cb = cb || function(){};
+  var session = opts.session;
+  var answer = opts.answer;
+  var origAnswer = opts.origAnswer;
+
+  return metadataClient.get({
+      answer: origAnswer
+    }, (err, metadata) => {
+      if (err) {
+        console.error('error getting metadata for answer', answer, err);
+        return cb(err);
+      }
+
+      console.log('answer metadata', metadata);
+
+      if (!metadata) {
+        session.send(answer);
+        return cb();
+      }
+
+      if (metadata.imageUrl) {
+        var card = new builder.HeroCard(session)
+          .title("Airbot")
+          .text(answer)
+          .images([
+                builder.CardImage.create(session, metadata.imageUrl)
+          ]);
+        var msg = new builder.Message(session).attachments([card]);
+        session.send(msg);
+      }
+      else {
+        session.send(answer);
+      }
+      return cb();
+    }
+  );
 }
