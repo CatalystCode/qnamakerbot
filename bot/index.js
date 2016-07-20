@@ -385,14 +385,20 @@ function sendAnswer(opts, cb) {
           session.send(msg);
       }
       else if (metadata.action == "Carousel") {
-          var card = new builder.HeroCard(session)
-          .title("Carousel")
-          .text(metadata.introText)
-          .buttons([
-            builder.CardAction.playVideo(session, metadata.button1Text)
-          ]);
+          var imgs = metadata.carouselImages.split(",");
+          var text = metadata.carouselText.split("|");
 
-          var msg = new builder.Message(session).attachments([card]);
+          var cards = [];
+          for (var i in imgs) {
+            var card = new builder.HeroCard(session)
+            .text(text[i])
+            .images([builder.CardImage.create(session, imgs[i])]);
+            cards.push(card);
+          }
+
+          var msg = new builder.Message(session)
+          .attachmentLayout(builder.AttachmentLayout.carousel)
+          .attachments(cards);
           session.send(msg);
       }
       else {
