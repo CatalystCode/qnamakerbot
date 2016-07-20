@@ -71,6 +71,33 @@ intents.matches(/^(help|hi|hello)/i, [
     }
 ]);
 
+intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
+  function (session) {
+    var msg = session.message.text;
+
+    tokens = msg.match(/read history ([-a-zA-Z0-9]*)/);
+    var token = null;
+    if ( !tokens || tokens.length <= 1 ) {
+      session.send( "Sorry, you entered an invalid token");
+      return;
+    }
+    token = tokens[1];
+
+    var user = new User( dataDao, "" );
+    user.findUserWithToken( token, function( err, userDoc ) {
+      if ( err ) {
+        console.log( "Error finding user with token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else if ( !userDoc ) {
+        console.log( "Invalid token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else {
+        session.send( JSON.stringify(userDoc.history) );
+      }
+    });
+  }
+]);
+
 intents.matches(/^(history)/i, [
       function (session) {
       if ( !session.userData.uniqueID ) {
@@ -116,11 +143,12 @@ intents.matches(/^(get token)/i, [
     }
 ]);
 
-intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
+intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
     function (session) {
       var msg = session.message.text;
+
       // extract out token
-      tokens = msg.match(/use token ([a-zA-Z0-9]*)/);
+      tokens = msg.match(/use token ([-a-zA-Z0-9]*)/);
       var token = null;
       if ( !tokens || tokens.length <= 1 ) {
         session.send( "Sorry, you entered an invalid token");
@@ -129,16 +157,16 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
       token = tokens[1];
 
       var user = new User( dataDao, "" );
-      user.joinWithToken( token, function( err, userDoc ) {
+      user.findUserWithToken( token, function( err, userDoc ) {
         if ( err ) {
-          console.log( "Error joining with token - ", err );
+          console.log( "Error finding user with token - ", err );
           session.send( "Sorry, this token is not valid");
         } else if ( !userDoc ) {
           console.log( "Invalid token - ", err );
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
-          session.send( userDoc.history );
+          session.send( JSON.stringify(userDoc.history) );
         }
       });
     }
