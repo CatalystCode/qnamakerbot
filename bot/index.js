@@ -333,6 +333,9 @@ function sendAnswer(opts) {
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
       }
+      else {
+        session.send(answer);
+      }
     }
   );
 }
