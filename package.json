@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/CatalystCode/airbots#readme",
   "dependencies": {
+    "applicationinsights": "^0.15.17",
     "async": "^2.0.0",
     "azure-event-hubs": "0.0.2",
     "azure-logging": "^0.3.2",
