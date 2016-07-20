@@ -64,7 +64,6 @@ catch (e) {
 //=========================================================
 
 
-
 bot.dialog('/', intents);
 
 intents.matches(/^(help|hi|hello)/i, [
@@ -225,7 +224,7 @@ bot.dialog('/approve', [
     function (session, promptConfirmResult) {
         var answer = promptConfirmResult.response;
         if (answer) {
-          session.send('great! glade I could help!');
+          session.send('great! Glad I could help!');
         } else {
           session.send('oh.. sorry I couldn\'t help... :/');
         }
@@ -272,7 +271,11 @@ function generateToken(args) {
 
 function handleQuestion( session, question, callback ) {
 
+  console.log("qna.get");
   qna.get({ question: question }, function(err, result) {
+
+    console.log(question);
+    console.log(result);
 
     if (err) {
       console.error('Failed to send request to QnAMaker service', err);
@@ -283,6 +286,7 @@ function handleQuestion( session, question, callback ) {
     var score = parseInt(result.score);
 
     var answer = "";
+
     if (score > scoreThreshHold) {
       answer = result.answer;
       sendAnswer({session, answer, origAnswer: answer});
@@ -312,13 +316,15 @@ function handleQuestion( session, question, callback ) {
 
 function sendAnswer(opts, cb) {
   cb = cb || function(){};
+
   var session = opts.session;
   var answer = opts.answer;
   var origAnswer = opts.origAnswer;
 
-  return metadataClient.get({
+  metadataClient.get({
       answer: origAnswer
     }, (err, metadata) => {
+
       if (err) {
         console.error('error getting metadata for answer', answer, err);
         return cb(err);
@@ -331,15 +337,34 @@ function sendAnswer(opts, cb) {
         return cb();
       }
 
-      if (metadata.imageUrl) {
+      if ("cardType" in metadata && metadata.cardType != null) {
+        if (cardType == "hero") {
+          var card = new builder.HeroCard(session)
+          .title(metadata.introText)
+          .buttons([
+            builder.CardAction.postBack(session, "option1", metadata.button1Text),
+            builder.CardAction.postBack(session, "option2", metadata.button2Text),
+          ])
+          .images([
+            builder.CardImage.create(session, metadata.mainImage)
+          ]);
+
+          var msg = new builder.Message(session).attachments([card]);
+          session.send(msg);
+        }
+
+      /*if (metadata.imageUrl) {
         var card = new builder.HeroCard(session)
           .title("Airbot")
           .text(answer)
           .images([
                 builder.CardImage.create(session, metadata.imageUrl)
           ]);
-        var msg = new builder.Message(session).attachments([card]);
-        session.send(msg);
+        */
+
+      }
+      else if (metadata.action == "RichContent") {
+          session.send(metadata.introText)
       }
       else {
         session.send(answer);
