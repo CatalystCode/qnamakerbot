@@ -20,18 +20,19 @@ function getQuestion() {
     rl.question("What's your question? ", function(question) {
         
         // using cb pattern
-        qnaClient.get({ question: question }, function(err, result){
-            console.log('got result:', result);
-
-            // using promises
-            rl.question("What's your question? ", function(question) {
-                qnaClient.get({ question: question }).then(function(result) {
-                    console.log('got result:', result);
-                    return getQuestion();
-                });
-            })
-
+        qnaClient.get({ question: question }, function(err, result) {
+            if (err) return console.error('error from callback:', err);
+            console.log('got result (using callback):', result);
         });
+
+        // using promises
+        qnaClient.get({ question: question }).then(function(result) {
+            console.log('got result (using promises):', result);
+        })
+        .catch((err) => {
+            console.log('error from promis:', err);
+        })
+
     });
 }
 
