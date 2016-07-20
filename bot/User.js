@@ -76,7 +76,7 @@ User.prototype = {
   setToken: function (token, callback ) {
     var self = this;
 
-    var tokenExpiry = moment().add(2, 'minutes').unix();
+    var tokenExpiry = moment().add(10, 'minutes').unix();
 
     self.dataDao.getItem( self.userId, function( err, doc) {
       if ( err ) {
@@ -90,7 +90,7 @@ User.prototype = {
       });      
     });
   },
-  joinWithToken: function (token, callback ) {
+  findUserWithToken: function (token, callback ) {
     var self = this;
 
     var now = moment().unix();

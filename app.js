@@ -1,5 +1,11 @@
-var restify = require('restify');
+process.on('uncaughtException', function (er) {
+  console.error('uncaughtException', er.stack)
+  setTimeout(() => {
+    process.exit(1);
+  }, 3000);
+});
 
+var restify = require('restify');
 var log = require('./log');
 
 if (log.config.enabled) {

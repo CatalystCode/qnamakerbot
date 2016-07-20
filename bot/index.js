@@ -73,6 +73,33 @@ intents.matches(/^(help|hi|hello)/i, [
     }
 ]);
 
+intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
+  function (session) {
+    var msg = session.message.text;
+
+    tokens = msg.match(/read history ([-a-zA-Z0-9]*)/);
+    var token = null;
+    if ( !tokens || tokens.length <= 1 ) {
+      session.send( "Sorry, you entered an invalid token");
+      return;
+    }
+    token = tokens[1];
+
+    var user = new User( dataDao, "" );
+    user.findUserWithToken( token, function( err, userDoc ) {
+      if ( err ) {
+        console.log( "Error finding user with token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else if ( !userDoc ) {
+        console.log( "Invalid token - ", err );
+        session.send( "Sorry, this token is not valid");
+      } else {
+        session.send( JSON.stringify(userDoc.history) );
+      }
+    });
+  }
+]);
+
 intents.matches(/^(history)/i, [
       function (session) {
       if ( !session.userData.uniqueID ) {
@@ -118,11 +145,12 @@ intents.matches(/^(get token)/i, [
     }
 ]);
 
-intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
+intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
     function (session) {
       var msg = session.message.text;
+
       // extract out token
-      tokens = msg.match(/use token ([a-zA-Z0-9]*)/);
+      tokens = msg.match(/use token ([-a-zA-Z0-9]*)/);
       var token = null;
       if ( !tokens || tokens.length <= 1 ) {
         session.send( "Sorry, you entered an invalid token");
@@ -131,16 +159,16 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
       token = tokens[1];
 
       var user = new User( dataDao, "" );
-      user.joinWithToken( token, function( err, userDoc ) {
+      user.findUserWithToken( token, function( err, userDoc ) {
         if ( err ) {
-          console.log( "Error joining with token - ", err );
+          console.log( "Error finding user with token - ", err );
           session.send( "Sorry, this token is not valid");
         } else if ( !userDoc ) {
           console.log( "Invalid token - ", err );
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
-          session.send( userDoc.history );
+          session.send( JSON.stringify(userDoc.history) );
         }
       });
     }
@@ -264,9 +292,11 @@ function handleQuestion( session, question, callback ) {
       }
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
-
-      sendAnswer({session, answer, origAnswer: result.answer});
-      session.beginDialog('/approve');
+      sendAnswer({session, answer, origAnswer: result.answer}, (err) => {
+        if (!err) {
+          session.beginDialog('/approve');
+        }
+      });
     }
     else {
       if (eventSender) {
@@ -280,7 +310,8 @@ function handleQuestion( session, question, callback ) {
   });
 }
 
-function sendAnswer(opts) {
+function sendAnswer(opts, cb) {
+  cb = cb || function(){};
   var session = opts.session;
   var answer = opts.answer;
   var origAnswer = opts.origAnswer;
@@ -288,11 +319,16 @@ function sendAnswer(opts) {
   return metadataClient.get({
       answer: origAnswer
     }, (err, metadata) => {
-      if (err) return console.error('error getting metadata for answer', answer, err);
+      if (err) {
+        console.error('error getting metadata for answer', answer, err);
+        return cb(err);
+      }
+
       console.log('answer metadata', metadata);
 
       if (!metadata) {
-        return session.send(answer);
+        session.send(answer);
+        return cb();
       }
 
       if (metadata.imageUrl) {
@@ -305,6 +341,10 @@ function sendAnswer(opts) {
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
       }
+      else {
+        session.send(answer);
+      }
+      return cb();
     }
   );
 }
