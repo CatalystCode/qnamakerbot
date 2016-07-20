@@ -5,7 +5,7 @@ var prompts = require('./prompts');
 var async = require('async');
 var uuid = require('node-uuid');
 var DocumentClient = require('documentdb').DocumentClient;
-
+var MetadataClient = require('./metadata').Client;
 var qna = require('./qna')();
 var ba_qna = require('./qna')("BA");
 
@@ -16,6 +16,8 @@ var opts = {
   appId: config.get('MICROSOFT_APP_ID'),
   appPassword: config.get('MICROSOFT_APP_PASSWORD')
 };
+
+var metadataClient = new MetadataClient();
 
 // Create chat bot
 var connector = new builder.ChatConnector(opts);
@@ -275,7 +277,7 @@ function handleQuestion( session, question, callback ) {
     if (err) {
       console.error('Failed to send request to QnAMaker service', err);
       session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
-      callback( err, null);
+      return callback( err, null);
     }
 
     var score = parseInt(result.score);
@@ -283,7 +285,7 @@ function handleQuestion( session, question, callback ) {
     var answer = "";
     if (score > scoreThreshHold) {
       answer = result.answer;
-      session.send(result.answer);
+      sendAnswer({session, answer, origAnswer: answer});
     }
     else if (score > 0) {
       if (eventSender) {
@@ -291,7 +293,7 @@ function handleQuestion( session, question, callback ) {
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
 
-      session.send(answer);
+      sendAnswer({session, answer, origAnswer: result.answer});
       session.beginDialog('/approve');
     }
     else {
@@ -304,4 +306,33 @@ function handleQuestion( session, question, callback ) {
     console.log('question:', question, 'result:', result);
     callback( null, answer );
   });
+}
+
+function sendAnswer(opts) {
+  var session = opts.session;
+  var answer = opts.answer;
+  var origAnswer = opts.origAnswer;
+
+  return metadataClient.get({
+      answer: origAnswer
+    }, (err, metadata) => {
+      if (err) return console.error('error getting metadata for answer', answer, err);
+      console.log('answer metadata', metadata);
+
+      if (!metadata) {
+        return session.send(answer);
+      }
+
+      if (metadata.imageUrl) {
+        var card = new builder.HeroCard(session)
+          .title("Airbot")
+          .text(answer)
+          .images([
+                builder.CardImage.create(session, metadata.imageUrl)
+          ]);
+        var msg = new builder.Message(session).attachments([card]);
+        session.send(msg);
+      }
+    }
+  );
 }
