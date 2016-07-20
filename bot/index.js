@@ -65,7 +65,7 @@ catch (e) {
 
 bot.dialog('/', intents);
 
-intents.matches(/^(help|hi)/i, [
+intents.matches(/^(help|hi|hello)/i, [
     function (session) {
         session.send(prompts.helpMessage);
     }
