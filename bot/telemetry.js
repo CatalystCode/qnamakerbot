@@ -18,6 +18,7 @@ appInsights.setup(aikey)
 // appInsights.client.trackEvent("server start");
 
 // create server
+/*
 var port = process.env.port || 1337
 var server = http.createServer(function (req, res) {
     // track all "GET" requests
@@ -28,6 +29,8 @@ var server = http.createServer(function (req, res) {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("Hello World\n");
 }).listen(port);
+
+*/
 
 // track startup time of the server as a custom metric
 // var start = +new Date;

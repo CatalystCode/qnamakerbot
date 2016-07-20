@@ -35,6 +35,14 @@ function startBot() {
     console.log('%s listening to %s', server.name, server.url);
   });
 
+  server.pre(function(req, res, next) {
+    //console.log('REQUEST:', req.url);
+    if (req.method !== 'GET') return next();
+
+    appInsights.client.trackRequest(req, res);
+    return next();
+  });
+
   var botConnector = require('./bot');
   server.post('/api/messages', botConnector.listen());
 }
