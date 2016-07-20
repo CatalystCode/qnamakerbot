@@ -1,6 +1,7 @@
 var fs = require("fs");
 var xlsx = require("node-xlsx");
 var striptags = require("striptags");
+var htmlencode = require("htmlencode");
 
 function main() {
 
@@ -28,19 +29,30 @@ function main() {
         meta.carouselImages = row[11]; // carousel images
         meta.carouselText = row[12]; // carousel text per image
 
-        var a = row[13];
-        if (q.indexOf('?') == q.length - 1) {
-          if (q in questions) {
-            if (questions[q].length > a.length) {
-              a = questions[q];
+        if (row[13]) {
+          var a = row[13];
+          if (q.indexOf('?') == q.length - 1) {
+            if (q in questions) {
+              if (questions[q].length > a.length) {
+                a = questions[q];
+              }
             }
-          }
 
-          var a = a.replace(/\n/g, "<br/>").trim();
-          var a = a.replace(/\r/g, "").trim();
-          a += "<metadata>" + JSON.stringify(meta) + "</metadata>";
-          //console.log(JSON.stringify(meta));
-          questions[q] = a;
+            if (meta.introText) {
+              // These are characters that can really ruin our day
+              meta.introText = meta.introText.replace(/“/g, "");
+              meta.introText = meta.introText.replace(/”/g, "");
+              meta.introText = meta.introText.replace(/\r/g, "");
+              meta.introText = meta.introText.replace(/\n/g, "");
+              //console.warn(meta.introText);
+              //console.warn("=====");
+            }
+
+            a = a.replace(/\n/g, "<br/>").trim();
+            a = a.replace(/\r/g, "").trim();
+            a += "[metadata]" + JSON.stringify(meta) + "[!metadata]";
+            questions[q] = a;
+          }
         }
       }
       lines++;
