@@ -2,11 +2,13 @@ var builder = require('botbuilder');
 var config = require('../config');
 var EventHubClient = require('azure-event-hubs').Client;
 var prompts = require('./prompts');
-var qna = require('./qna');
 var async = require('async');
 var uuid = require('node-uuid');
-
 var DocumentClient = require('documentdb').DocumentClient;
+
+var qna = require('./qna')();
+var ba_qna = require('./qna')("BA");
+
 var DataDao = require('./DataDao');
 var User = require('./User');
 
@@ -73,7 +75,7 @@ intents.matches(/^(history)/i, [
       // Generate token
       var user = new User( dataDao, session.userData.uniqueID );
       user.getHistory( function( err, history ) {
-        if ( err ) {
+        if (err) {
           session.send( "Sorry, there was an error - " + err );
         } else if ( !history ) { 
           session.send( "Sorry, No user history available" );
@@ -136,38 +138,38 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
 function handleQuestion( session, question, callback ) {
   qna.get({ question: question }, function(err, result) {
     if (err) {
-      console.error('Failed to send request to QnAMaker service', err);
+          console.error('Failed to send request to QnAMaker service', err);
       session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
       callback( err, null);
-    }
+        }
 
-    var score = parseInt(result.score);
+        var score = parseInt(result.score);
 
     var answer = "";
-    if (score > scoreThreshHold) {
+        if (score > scoreThreshHold) {
       anwer = result.answer;
-      session.send(result.answer);
-    }
-    else if (score > 0) {
-      if (eventSender) {
-      }
+          session.send(result.answer);
+        }
+        else if (score > 0) {
+          if (eventSender) {
+          }
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
 
       session.send(answer);
-      session.beginDialog('/approve');
-    }
-    else {
-      if (eventSender) {
-      }
+          session.beginDialog('/approve');
+        }
+        else {
+          if (eventSender) {
+          }
       answer = 'Sorry, I don\'t know... :/';
       session.send(answer);
-    }
+        }
 
-    console.log('question:', question, 'result:', result);
+        console.log('question:', question, 'result:', result);
     callback( null, answer );
-  });
-}
+      });
+    }
 
 // a question was asked
 intents.onDefault([function (session, args, next) {
