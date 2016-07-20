@@ -292,9 +292,11 @@ function handleQuestion( session, question, callback ) {
       }
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
-
-      sendAnswer({session, answer, origAnswer: result.answer});
-      session.beginDialog('/approve');
+      sendAnswer({session, answer, origAnswer: result.answer}, (err) => {
+        if (!err) {
+          session.beginDialog('/approve');
+        }
+      });
     }
     else {
       if (eventSender) {
@@ -308,7 +310,8 @@ function handleQuestion( session, question, callback ) {
   });
 }
 
-function sendAnswer(opts) {
+function sendAnswer(opts, cb) {
+  cb = cb || function(){};
   var session = opts.session;
   var answer = opts.answer;
   var origAnswer = opts.origAnswer;
@@ -316,11 +319,16 @@ function sendAnswer(opts) {
   return metadataClient.get({
       answer: origAnswer
     }, (err, metadata) => {
-      if (err) return console.error('error getting metadata for answer', answer, err);
+      if (err) {
+        console.error('error getting metadata for answer', answer, err);
+        return cb(err);
+      }
+
       console.log('answer metadata', metadata);
 
       if (!metadata) {
-        return session.send(answer);
+        session.send(answer);
+        return cb();
       }
 
       if (metadata.imageUrl) {
@@ -336,6 +344,7 @@ function sendAnswer(opts) {
       else {
         session.send(answer);
       }
+      return cb();
     }
   );
 }
