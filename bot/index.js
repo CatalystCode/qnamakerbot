@@ -80,11 +80,11 @@ intents.onDefault([
 
 bot.dialog('/approve', [
     function (session) {
-        builder.Prompts.text(session, 'Was that helpful?');
+       builder.Prompts.confirm(session, 'Was that helpful?', { listStyle: builder.ListStyle.button });
     },
-    function (session, results) {
-        var answer = results.response;
-        if (answer === 'yes') {
+    function (session, promptConfirmResult) {
+        var answer = promptConfirmResult.response;
+        if (answer) {
           session.send('great! glade I could help!');
         } else {
           session.send('oh.. sorry I couldn\'t help... :/');
