@@ -402,7 +402,7 @@ function sendAnswer(opts, cb) {
           session.send(msg);
       }
       else {
-        session.send(answer);
+        session.send(metadata.answer);
       }
       return cb();
     }
