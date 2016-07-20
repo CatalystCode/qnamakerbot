@@ -137,39 +137,41 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
 
 function handleQuestion( session, question, callback ) {
   qna.get({ question: question }, function(err, result) {
-    if (err) {
-          console.error('Failed to send request to QnAMaker service', err);
-      session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
-      callback( err, null);
-        }
 
-        var score = parseInt(result.score);
+  if (err) {
+    console.error('Failed to send request to QnAMaker service', err);
+    session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
+    callback( err, null);
+  }
 
-    var answer = "";
-        if (score > scoreThreshHold) {
-      anwer = result.answer;
-          session.send(result.answer);
-        }
-        else if (score > 0) {
-          if (eventSender) {
-          }
+  var score = parseInt(result.score);
 
-      answer = 'I\'m not sure, but the answer might be: ' + result.answer;
+  var answer = "";
+  if (score > scoreThreshHold) {
+    answer = result.answer;
+    session.send(result.answer);
+  }
+  else if (score > 0) {
 
-      session.send(answer);
-          session.beginDialog('/approve');
-        }
-        else {
-          if (eventSender) {
-          }
+    if (eventSender) {
+    }
+
+    answer = 'I\'m not sure, but the answer might be: ' + result.answer;
+
+    session.send(answer);
+      session.beginDialog('/approve');
+    }
+    else {
+      if (eventSender) {
+      }
       answer = 'Sorry, I don\'t know... :/';
       session.send(answer);
-        }
-
-        console.log('question:', question, 'result:', result);
-    callback( null, answer );
-      });
     }
+
+    console.log('question:', question, 'result:', result);
+    callback( null, answer );
+  });
+}
 
 // a question was asked
 intents.onDefault([function (session, args, next) {
