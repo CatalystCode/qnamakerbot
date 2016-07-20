@@ -46,10 +46,16 @@ var databaseName = config.get( 'DB_NAME' );
 var collectionName = config.get( "DB_COLLECTION_NAME" );
 var docDbClient = new DocumentClient(databaseHost, {masterKey: databaseMasterKey});
 
-var dataDao = new DataDao(docDbClient, databaseName, collectionName);
-dataDao.init( function( error ) {
-  console.log( "ERROR CONNECTING TO DATABASE! - ", error );
-});
+var dataDao = null;
+try {
+  dataDao = new DataDao(docDbClient, databaseName, collectionName);
+  dataDao.init( function( error ) {
+    console.log( "ERROR CONNECTING TO DATABASE! - ", error );
+  });
+}
+catch (e) {
+  console.warn("Error initialising DocumentDb client");
+}
 
 //=========================================================
 // Bots Dialogs
