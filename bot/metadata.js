@@ -28,6 +28,7 @@ Client.prototype.get = function (opts, cb) {
       var metaEnd = opts.answer.indexOf(endTag);
       var meta = opts.answer.slice(metaStart + startTag.length, metaEnd);      
       metadata = JSON.parse(meta);
+      metadata.answer = opts.answer.slice(0, metaStart);
     }
 
     /*var hash = crypto.createHash('md5').update(opts.answer).digest('hex');

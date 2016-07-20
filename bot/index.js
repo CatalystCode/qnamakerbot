@@ -222,6 +222,8 @@ intents.onDefault([function (session, args, next) {
 }]);
 
 
+/*
+ * This is the 'Was that helpful dialog' getting rid for now
 bot.dialog('/approve', [
     function (session) {
        builder.Prompts.confirm(session, 'Was that helpful?', { listStyle: builder.ListStyle.button });
@@ -238,7 +240,7 @@ bot.dialog('/approve', [
         session.endDialog();
     }
 ]);
-
+*/
 
 bot.use({
   botbuilder: function (session, next) {
@@ -304,7 +306,8 @@ function handleQuestion( session, question, callback ) {
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
       sendAnswer({session, answer, origAnswer: result.answer}, (err) => {
         if (!err) {
-          session.beginDialog('/approve');
+          // Remove the 'Was that helpful stuff'
+          // session.beginDialog('/approve');
         }
       });
     }
@@ -318,6 +321,21 @@ function handleQuestion( session, question, callback ) {
     console.log('question:', question, 'result:', result);
     callback( null, answer );
   });
+}
+
+function makeButton(session, text, action) {
+    var button;
+
+    if (action.indexOf("youtube") != -1) {
+      // playVideo doesn't work - just ruins the card
+      button = builder.CardAction.openUrl(session, action, text);
+      //button = builder.CardAction.playVideo(session, action, text);
+    }
+    else {
+      button = builder.CardAction.openUrl(session, action, text);
+    }
+
+    return button;
 }
 
 function sendAnswer(opts, cb) {
@@ -343,34 +361,39 @@ function sendAnswer(opts, cb) {
         return cb();
       }
 
-      if ("cardType" in metadata && metadata.cardType != null) {
-        if (cardType == "hero") {
+      if (metadata.action == "RichContent") {
+          session.send(metadata.introText)
+      }
+      else if (metadata.action == "Video") {
+
+          var buttons = [];
+          buttons.push(makeButton(session, metadata.button1Text, metadata.button1Action));
+          buttons.push(makeButton(session, metadata.button2Text, metadata.button2Action));
+          buttons = buttons.filter((x) => { return (x != null); });
+
           var card = new builder.HeroCard(session)
-          .title(metadata.introText)
+          .title("Video")
+          .images([new builder.CardImage(session).url(metadata.mainImage)])
+          .text(metadata.introText)
+          .buttons(buttons);
+
+          if (metadata.answer) {
+            session.send(metadata.answer);
+          }
+
+          var msg = new builder.Message(session).attachments([card]);
+          session.send(msg);
+      }
+      else if (metadata.action == "Carousel") {
+          var card = new builder.HeroCard(session)
+          .title("Carousel")
+          .text(metadata.introText)
           .buttons([
-            builder.CardAction.postBack(session, "option1", metadata.button1Text),
-            builder.CardAction.postBack(session, "option2", metadata.button2Text),
-          ])
-          .images([
-            builder.CardImage.create(session, metadata.mainImage)
+            builder.CardAction.playVideo(session, metadata.button1Text)
           ]);
 
           var msg = new builder.Message(session).attachments([card]);
           session.send(msg);
-        }
-
-      /*if (metadata.imageUrl) {
-        var card = new builder.HeroCard(session)
-          .title("Airbot")
-          .text(answer)
-          .images([
-                builder.CardImage.create(session, metadata.imageUrl)
-          ]);
-        */
-
-      }
-      else if (metadata.action == "RichContent") {
-          session.send(metadata.introText)
       }
       else {
         session.send(answer);

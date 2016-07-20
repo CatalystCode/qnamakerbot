@@ -54,6 +54,9 @@ function main(argv) {
               questions[q] = a;
             }
           }
+        } else {
+          console.warn("Skipping question because no answer: " + q);
+          console.warn(row);
         }
       }
       lines++;
