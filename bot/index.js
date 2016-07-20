@@ -77,7 +77,7 @@ intents.matches(/^(history)/i, [
       user.getHistory( function( err, history ) {
         if (err) {
           session.send( "Sorry, there was an error - " + err );
-        } else if ( !history ) { 
+        } else if ( !history ) {
           session.send( "Sorry, No user history available" );
         } else {
           session.send( JSON.stringify(history) );
@@ -190,7 +190,7 @@ intents.onDefault([function (session, args, next) {
       var question = session.message.text;
       handleQuestion( session, question, function( err, result ) {
         if ( err ) {
-          callback( err ); 
+          callback( err );
         } else {
           var historyItem = {"question": question, "answer" : result };
           callback( null, userId, historyItem );
@@ -199,9 +199,9 @@ intents.onDefault([function (session, args, next) {
     },
     function( userId, historyItem, callback) {
       // Create or Update the users history
-      var user = new User( dataDao, userId ); 
+      var user = new User( dataDao, userId );
       user.addHistory( historyItem, function( err, status) {
-        callback( err, status );  
+        callback( err, status );
       })
     }
   ], function( err, result) {
@@ -220,7 +220,7 @@ bot.dialog('/approve', [
     function (session, promptConfirmResult) {
         var answer = promptConfirmResult.response;
         if (answer) {
-          session.send('great! glade I could help!');
+          session.send('great! Glad I could help!');
         } else {
           session.send('oh.. sorry I couldn\'t help... :/');
         }
