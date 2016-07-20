@@ -18,10 +18,14 @@
   },
   "homepage": "https://github.com/CatalystCode/airbots#readme",
   "dependencies": {
+    "async": "^2.0.0",
     "azure-event-hubs": "0.0.2",
     "azure-logging": "^0.3.2",
     "botbuilder": "3.0.1",
+    "documentdb": "^1.9.0",
+    "moment": "^2.14.1",
     "nconf": "^0.8.4",
+    "node-uuid": "^1.4.7",
     "qnamaker-client": "git+https://git@github.com/CatalystCode/qnamaker-client.git",
     "restify": "4.1.1"
   },
