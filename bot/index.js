@@ -171,13 +171,9 @@ intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
-<<<<<<< HEAD
-          session.send( userDoc.history );
 
            telemetry.trackEvent("custom event", { "TokenUsed" : token});
-=======
           session.send( JSON.stringify(userDoc.history) );
->>>>>>> 4614b130780ab79eb8f45d20bdc5a789702ea22f
         }
       });
     }
