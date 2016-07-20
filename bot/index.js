@@ -46,10 +46,16 @@ var databaseName = config.get( 'DB_NAME' );
 var collectionName = config.get( "DB_COLLECTION_NAME" );
 var docDbClient = new DocumentClient(databaseHost, {masterKey: databaseMasterKey});
 
-var dataDao = new DataDao(docDbClient, databaseName, collectionName);
-dataDao.init( function( error ) {
-  console.log( "ERROR CONNECTING TO DATABASE! - ", error );
-});
+var dataDao = null;
+try {
+  dataDao = new DataDao(docDbClient, databaseName, collectionName);
+  dataDao.init( function( error ) {
+    console.log( "ERROR CONNECTING TO DATABASE! - ", error );
+  });
+}
+catch (e) {
+  console.warn("Error initialising DocumentDb client");
+}
 
 //=========================================================
 // Bots Dialogs
@@ -77,7 +83,7 @@ intents.matches(/^(history)/i, [
       user.getHistory( function( err, history ) {
         if (err) {
           session.send( "Sorry, there was an error - " + err );
-        } else if ( !history ) { 
+        } else if ( !history ) {
           session.send( "Sorry, No user history available" );
         } else {
           session.send( JSON.stringify(history) );
@@ -93,14 +99,18 @@ intents.matches(/^(get token)/i, [
         return
       }
 
-      // Generate token
-      var token = "bob";
+      // Generate token - TODO: Make sure that this token is unique in the DB!
+      var token = generateToken();
       var user = new User( dataDao, session.userData.uniqueID );
       user.setToken( token, function( err, userDoc ) {
         if ( err ) {
           session.send( "Sorry, there was an error - " + err );
         } else {
-          session.send( "You can change channels with this token - " + userDoc.token + "\nIts valid for 2 minutes" );
+          var bacomLink = "https://ba.com/?botid=" + token;
+          var mobileLink = "IAGMSBot://" + token;
+          session.send( "You can continue this conversation on either ba.com using the link: " +
+            bacomLink + "\n\nOr alternatively on the BA Mobile App using " + mobileLink +
+            "\n\nNote - this link is valid for 2 minutes");
         }
       })
     }
@@ -128,48 +138,13 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
-          session.send( "OK, continuing session - reply history to see your history");
+          session.send( userDoc.history );
         }
       });
     }
 ]);
 
 
-function handleQuestion( session, question, callback ) {
-  qna.get({ question: question }, function(err, result) {
-    if (err) {
-          console.error('Failed to send request to QnAMaker service', err);
-      session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
-      callback( err, null);
-        }
-
-        var score = parseInt(result.score);
-
-    var answer = "";
-        if (score > scoreThreshHold) {
-      anwer = result.answer;
-          session.send(result.answer);
-        }
-        else if (score > 0) {
-          if (eventSender) {
-          }
-
-      answer = 'I\'m not sure, but the answer might be: ' + result.answer;
-
-      session.send(answer);
-          session.beginDialog('/approve');
-        }
-        else {
-          if (eventSender) {
-          }
-      answer = 'Sorry, I don\'t know... :/';
-      session.send(answer);
-        }
-
-        console.log('question:', question, 'result:', result);
-    callback( null, answer );
-      });
-    }
 
 // a question was asked
 intents.onDefault([function (session, args, next) {
@@ -190,7 +165,7 @@ intents.onDefault([function (session, args, next) {
       var question = session.message.text;
       handleQuestion( session, question, function( err, result ) {
         if ( err ) {
-          callback( err ); 
+          callback( err );
         } else {
           var historyItem = {"question": question, "answer" : result };
           callback( null, userId, historyItem );
@@ -199,9 +174,9 @@ intents.onDefault([function (session, args, next) {
     },
     function( userId, historyItem, callback) {
       // Create or Update the users history
-      var user = new User( dataDao, userId ); 
+      var user = new User( dataDao, userId );
       user.addHistory( historyItem, function( err, status) {
-        callback( err, status );  
+        callback( err, status );
       })
     }
   ], function( err, result) {
@@ -244,3 +219,61 @@ bot.use({
 
 module.exports = connector;
 
+function generateToken(args) {
+
+    var text = '';
+    var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (var i = 0; i < 3; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    text += '-';
+
+    for (var j = 0; j < 3; j++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    text += '-';
+
+    for (var k = 0; k < 3; k++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+function handleQuestion( session, question, callback ) {
+
+  qna.get({ question: question }, function(err, result) {
+
+    if (err) {
+      console.error('Failed to send request to QnAMaker service', err);
+      session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
+      callback( err, null);
+    }
+
+    var score = parseInt(result.score);
+
+    var answer = "";
+    if (score > scoreThreshHold) {
+      answer = result.answer;
+      session.send(result.answer);
+    }
+    else if (score > 0) {
+      if (eventSender) {
+      }
+
+      answer = 'I\'m not sure, but the answer might be: ' + result.answer;
+
+      session.send(answer);
+      session.beginDialog('/approve');
+    }
+    else {
+      if (eventSender) {
+      }
+      answer = 'Sorry, I don\'t know... :/';
+      session.send(answer);
+    }
+
+    console.log('question:', question, 'result:', result);
+    callback( null, answer );
+  });
+}
