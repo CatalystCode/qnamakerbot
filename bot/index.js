@@ -4,6 +4,7 @@ var EventHubClient = require('azure-event-hubs').Client;
 var prompts = require('./prompts');
 var async = require('async');
 var uuid = require('node-uuid');
+var telemetry = require('./telemetry');
 var DocumentClient = require('documentdb').DocumentClient;
 var MetadataClient = require('./metadata').Client;
 var qna = require('./qna')();
@@ -140,6 +141,8 @@ intents.matches(/^(get token)/i, [
           session.send( "You can continue this conversation on either ba.com using the link: " +
             bacomLink + "\n\nOr alternatively on the BA Mobile App using " + mobileLink +
             "\n\nNote - this link is valid for 2 minutes");
+            
+          telemetry.trackEvent("custom event", { "GenerateToken" : token});
         }
       })
     }
@@ -168,6 +171,8 @@ intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
+
+           telemetry.trackEvent("custom event", { "TokenUsed" : token});
           session.send( JSON.stringify(userDoc.history) );
         }
       });
@@ -224,8 +229,9 @@ bot.dialog('/approve', [
     },
     function (session, promptConfirmResult) {
         var answer = promptConfirmResult.response;
+        telemetry.trackEvent("custom event", { "AnswerHelpful" : answer.toString()});
         if (answer) {
-          session.send('great! glade I could help!');
+          session.send('great! glad I could help!');
         } else {
           session.send('oh.. sorry I couldn\'t help... :/');
         }

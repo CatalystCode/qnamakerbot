@@ -9,9 +9,23 @@ function User(dataDao, userId) {
 module.exports = User;
 
 
+function expireOldHistoryItems( doc ) {
+    // expire existing history items
+    var currentTime = moment().unix();
+    for(var i = doc.history.length -1; i >= 0 ; i--){
+        if(!doc.history[i].expiryDate || doc.history[i].expiryDate < currentTime){
+            doc.history.splice(i, 1);
+        }
+    }
+}
+
 User.prototype = {
   addHistory: function (historyItem, callback ) {
     var self = this;
+
+    // Add new history item
+    var historyExpiry = moment().add(1, 'day').unix();
+    historyItem.expiryDate = historyExpiry;
 
     self.dataDao.getItem( self.userId, function( err, doc) {
       var newDoc = false;
@@ -24,9 +38,12 @@ User.prototype = {
 
         newDoc = true;
         doc = { userId: self.userId, history: [historyItem] };
-        newDoc = true;
       } else {
         console.log( "Updating history" );
+
+        expireOldHistoryItems( doc );
+
+        // Add new item
         doc.history.unshift( historyItem );
       }
 
@@ -69,6 +86,10 @@ User.prototype = {
         console.log( "Creating new user doc" );
         return callback( "Couldn't find user" );
       } else {
+
+        // Expire old history items
+        expireOldHistoryItems( doc );
+
         return callback( null, doc.history );
       }
     });
@@ -120,7 +141,7 @@ User.prototype = {
       }
       // We have, remove the token value as it has been used
       var doc = results[0];
-      doc.token = null;
+//      doc.token = null;
       self.dataDao.updateItem( doc, function( err, replaced ) {
         callback(err, replaced);
       });
