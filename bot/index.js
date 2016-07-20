@@ -93,14 +93,18 @@ intents.matches(/^(get token)/i, [
         return
       }
 
-      // Generate token
-      var token = "bob";
+      // Generate token - TODO: Make sure that this token is unique in the DB!
+      var token = generateToken();
       var user = new User( dataDao, session.userData.uniqueID );
       user.setToken( token, function( err, userDoc ) {
         if ( err ) {
           session.send( "Sorry, there was an error - " + err );
         } else {
-          session.send( "You can change channels with this token - " + userDoc.token + "\nIts valid for 2 minutes" );
+          var bacomLink = "https://ba.com/?botid=" + token;
+          var mobileLink = "IAGMSBot://" + token;
+          session.send( "You can continue this conversation on either ba.com using the link: " +
+            bacomLink + "\n\nOr alternatively on the BA Mobile App using " + mobileLink +
+            "\n\nNote - this link is valid for 2 minutes");
         }
       })
     }
@@ -128,48 +132,13 @@ intents.matches(/^(use token) ([a-zA-Z0-9]*)/i, [
           session.send( "Sorry, this token is not valid");
         } else {
           session.userData.uniqueID = userDoc.userId;
-          session.send( "OK, continuing session - reply history to see your history");
+          session.send( userDoc.history );
         }
       });
     }
 ]);
 
 
-function handleQuestion( session, question, callback ) {
-  qna.get({ question: question }, function(err, result) {
-    if (err) {
-          console.error('Failed to send request to QnAMaker service', err);
-      session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
-      callback( err, null);
-        }
-
-        var score = parseInt(result.score);
-
-    var answer = "";
-        if (score > scoreThreshHold) {
-      anwer = result.answer;
-          session.send(result.answer);
-        }
-        else if (score > 0) {
-          if (eventSender) {
-          }
-
-      answer = 'I\'m not sure, but the answer might be: ' + result.answer;
-
-      session.send(answer);
-          session.beginDialog('/approve');
-        }
-        else {
-          if (eventSender) {
-          }
-      answer = 'Sorry, I don\'t know... :/';
-      session.send(answer);
-        }
-
-        console.log('question:', question, 'result:', result);
-    callback( null, answer );
-      });
-    }
 
 // a question was asked
 intents.onDefault([function (session, args, next) {
@@ -244,3 +213,59 @@ bot.use({
 
 module.exports = connector;
 
+function generateToken(args) {
+
+    var text = '';
+    var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (var i = 0; i < 3; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    text += '-';
+
+    for (var j = 0; j < 3; j++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    text += '-';
+
+    for (var k = 0; k < 3; k++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+function handleQuestion( session, question, callback ) {
+  qna.get({ question: question }, function(err, result) {
+    if (err) {
+          console.error('Failed to send request to QnAMaker service', err);
+      session.send('Sorry, I have some issues connecting to the remote QnA Maker service');
+      callback( err, null);
+        }
+
+        var score = parseInt(result.score);
+
+    var answer = "";
+        if (score > scoreThreshHold) {
+      anwer = result.answer;
+          session.send(result.answer);
+        }
+        else if (score > 0) {
+          if (eventSender) {
+          }
+
+      answer = 'I\'m not sure, but the answer might be: ' + result.answer;
+
+      session.send(answer);
+          session.beginDialog('/approve');
+        }
+        else {
+          if (eventSender) {
+          }
+      answer = 'Sorry, I don\'t know... :/';
+      session.send(answer);
+        }
+
+        console.log('question:', question, 'result:', result);
+    callback( null, answer );
+      });
+    }

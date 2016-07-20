@@ -19,7 +19,7 @@ function newQnAClient(faq) {
 
 var useMock = (config.get('QNA_USE_MOCK') || '').toString().toLowerCase() === 'true';
 if (useMock) {
-  qnaClient.get = (opts, cb) => {
+  QnAClient.get = (opts, cb) => {
     process.nextTick(() => {
       var score = opts.question;
       return cb(null, {
