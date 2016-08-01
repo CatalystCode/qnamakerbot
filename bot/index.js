@@ -1,14 +1,12 @@
 var builder = require('botbuilder');
 var config = require('../config');
-var EventHubClient = require('azure-event-hubs').Client;
 var prompts = require('./prompts');
 var async = require('async');
 var uuid = require('node-uuid');
 var telemetry = require('./telemetry').Telemetry;
 var DocumentClient = require('documentdb').DocumentClient;
 var MetadataClient = require('./metadata').Client;
-var qna = require('./qna')();
-var baQna = require('./qna')('BA');
+var qna = require('./qna');
 
 var DataDao = require('./DataDao');
 var User = require('./User');
@@ -27,20 +25,6 @@ var intents = new builder.IntentDialog();
 
 var scoreThreshHold = config.get('QNA_SCORE_THRESHHOLD') || 60;
 scoreThreshHold = parseInt(scoreThreshHold);
-
-var eventHubConfig = config.get('EVENT_HUB_READ_CONFIG');
-var eventSender = null;
-if (eventHubConfig) {
-  var eventHubClient = new EventHubClient.fromConnectionString(eventHubConfig);
-  eventHubClient.createSender()
-  .then((sender) => {
-    eventSender = sender;
-  })
-  .catch((e) => {
-    console.warn('Couldn\'t create event sender');
-    console.warn(e.stack);
-  });
-}
 
 // Connect database - Move this to config
 var databaseHost = config.get( 'DB_HOST' );
@@ -135,10 +119,10 @@ intents.matches(/^(get token)/i, [
       if ( err ) {
         session.send( 'Sorry, there was an error - ' + err );
       } else {
-        var bacomLink = 'https://ba.com/?botid=' + token;
-        var mobileLink = 'IAGMSBot://' + token;
-        session.send( 'You can continue this conversation on either ba.com using the link: ' +
-          bacomLink + '\n\nOr alternatively on the BA Mobile App using ' + mobileLink +
+        var webLink = 'http://<YOUR_WEBSITE_HERE>/' + token;
+        var mobileLink = '<YOUR_APP_URL_SCHEME>://' + token;
+        session.send( 'You can continue this conversation on the web using the link: ' +
+          webLink + '\n\nOr alternatively on the mobile app using ' + mobileLink +
           '\n\nNote - this link is valid for 2 minutes');
 
         telemetry.trackEvent('custom event', { 'GenerateToken' : token});
