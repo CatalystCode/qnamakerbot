@@ -8,7 +8,7 @@ var telemetry = require('./telemetry').Telemetry;
 var DocumentClient = require('documentdb').DocumentClient;
 var MetadataClient = require('./metadata').Client;
 var qna = require('./qna')();
-var ba_qna = require('./qna')("BA");
+var baQna = require('./qna')('BA');
 
 var DataDao = require('./DataDao');
 var User = require('./User');
@@ -46,18 +46,18 @@ if (eventHubConfig) {
 var databaseHost = config.get( 'DB_HOST' );
 var databaseMasterKey = config.get( 'DB_MASTER_KEY' );
 var databaseName = config.get( 'DB_NAME' );
-var collectionName = config.get( "DB_COLLECTION_NAME" );
+var collectionName = config.get( 'DB_COLLECTION_NAME' );
 var docDbClient = new DocumentClient(databaseHost, {masterKey: databaseMasterKey});
 
 var dataDao = null;
 try {
   dataDao = new DataDao(docDbClient, databaseName, collectionName);
   dataDao.init( function( error ) {
-    console.log( "ERROR CONNECTING TO DATABASE! - ", error );
+    console.log( 'ERROR CONNECTING TO DATABASE! - ', error );
   });
 }
 catch (e) {
-  console.warn("Error initialising DocumentDb client");
+  console.warn('Error initialising DocumentDb client');
 }
 
 //=========================================================
@@ -68,9 +68,9 @@ catch (e) {
 bot.dialog('/', intents);
 
 intents.matches(/^(help|hi|hello)/i, [
-    function (session) {
-        session.send(prompts.helpMessage);
-    }
+  function (session) {
+    session.send(prompts.helpMessage);
+  }
 ]);
 
 intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
@@ -80,19 +80,19 @@ intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
     tokens = msg.match(/read history ([-a-zA-Z0-9]*)/);
     var token = null;
     if ( !tokens || tokens.length <= 1 ) {
-      session.send( "Sorry, you entered an invalid token");
+      session.send( 'Sorry, you entered an invalid token');
       return;
     }
     token = tokens[1];
 
-    var user = new User( dataDao, "" );
+    var user = new User( dataDao, '' );
     user.findUserWithToken( token, function( err, userDoc ) {
       if ( err ) {
-        console.log( "Error finding user with token - ", err );
-        session.send( "Sorry, this token is not valid");
+        console.log( 'Error finding user with token - ', err );
+        session.send( 'Sorry, this token is not valid');
       } else if ( !userDoc ) {
-        console.log( "Invalid token - ", err );
-        session.send( "Sorry, this token is not valid");
+        console.log( 'Invalid token - ', err );
+        session.send( 'Sorry, this token is not valid');
       } else {
         session.send( JSON.stringify(userDoc.history) );
       }
@@ -101,81 +101,80 @@ intents.matches(/^read history ([-a-zA-Z0-9]*)/i, [
 ]);
 
 intents.matches(/^(history)/i, [
-      function (session) {
-      if ( !session.userData.uniqueID ) {
-        session.send( "No user history available");
-        return
-      }
-
-      // Generate token
-      var user = new User( dataDao, session.userData.uniqueID );
-      user.getHistory( function( err, history ) {
-        if (err) {
-          session.send( "Sorry, there was an error - " + err );
-        } else if ( !history ) {
-          session.send( "Sorry, No user history available" );
-        } else {
-          session.send( JSON.stringify(history) );
-        }
-      });
+  function (session) {
+    if ( !session.userData.uniqueID ) {
+      session.send( 'No user history available');
+      return;
     }
+
+    // Generate token
+    var user = new User( dataDao, session.userData.uniqueID );
+    user.getHistory( function( err, history ) {
+      if (err) {
+        session.send( 'Sorry, there was an error - ' + err );
+      } else if ( !history ) {
+        session.send( 'Sorry, No user history available' );
+      } else {
+        session.send( JSON.stringify(history) );
+      }
+    });
+  }
 ]);
 
 intents.matches(/^(get token)/i, [
-    function (session) {
-      if ( !session.userData.uniqueID ) {
-        session.send( "Unable to get a token at this time. Sorry");
-        return
-      }
-
-      // Generate token - TODO: Make sure that this token is unique in the DB!
-      var token = generateToken();
-      var user = new User( dataDao, session.userData.uniqueID );
-      user.setToken( token, function( err, userDoc ) {
-        if ( err ) {
-          session.send( "Sorry, there was an error - " + err );
-        } else {
-          var bacomLink = "https://ba.com/?botid=" + token;
-          var mobileLink = "IAGMSBot://" + token;
-          session.send( "You can continue this conversation on either ba.com using the link: " +
-            bacomLink + "\n\nOr alternatively on the BA Mobile App using " + mobileLink +
-            "\n\nNote - this link is valid for 2 minutes");
-
-          telemetry.trackEvent("custom event", { "GenerateToken" : token});
-        }
-      })
+  function (session) {
+    if ( !session.userData.uniqueID ) {
+      session.send( 'Unable to get a token at this time. Sorry');
+      return;
     }
+
+    // Generate token - TODO: Make sure that this token is unique in the DB!
+    var token = generateToken();
+    var user = new User( dataDao, session.userData.uniqueID );
+    user.setToken( token, function( err, userDoc ) {
+      if ( err ) {
+        session.send( 'Sorry, there was an error - ' + err );
+      } else {
+        var bacomLink = 'https://ba.com/?botid=' + token;
+        var mobileLink = 'IAGMSBot://' + token;
+        session.send( 'You can continue this conversation on either ba.com using the link: ' +
+          bacomLink + '\n\nOr alternatively on the BA Mobile App using ' + mobileLink +
+          '\n\nNote - this link is valid for 2 minutes');
+
+        telemetry.trackEvent('custom event', { 'GenerateToken' : token});
+      }
+    });
+  }
 ]);
 
 intents.matches(/^(use token) ([-a-zA-Z0-9]*)/i, [
-    function (session) {
-      var msg = session.message.text;
+  function (session) {
+    var msg = session.message.text;
 
-      // extract out token
-      tokens = msg.match(/use token ([-a-zA-Z0-9]*)/);
-      var token = null;
-      if ( !tokens || tokens.length <= 1 ) {
-        session.send( "Sorry, you entered an invalid token");
-        return;
-      }
-      token = tokens[1];
-
-      var user = new User( dataDao, "" );
-      user.findUserWithToken( token, function( err, userDoc ) {
-        if ( err ) {
-          console.log( "Error finding user with token - ", err );
-          session.send( "Sorry, this token is not valid");
-        } else if ( !userDoc ) {
-          console.log( "Invalid token - ", err );
-          session.send( "Sorry, this token is not valid");
-        } else {
-          session.userData.uniqueID = userDoc.userId;
-
-           telemetry.trackEvent("custom event", { "TokenUsed" : token});
-          session.send( JSON.stringify(userDoc.history) );
-        }
-      });
+    // extract out token
+    tokens = msg.match(/use token ([-a-zA-Z0-9]*)/);
+    var token = null;
+    if ( !tokens || tokens.length <= 1 ) {
+      session.send( 'Sorry, you entered an invalid token');
+      return;
     }
+    token = tokens[1];
+
+    var user = new User( dataDao, '' );
+    user.findUserWithToken( token, function( err, userDoc ) {
+      if ( err ) {
+        console.log( 'Error finding user with token - ', err );
+        session.send( 'Sorry, this token is not valid');
+      } else if ( !userDoc ) {
+        console.log( 'Invalid token - ', err );
+        session.send( 'Sorry, this token is not valid');
+      } else {
+        session.userData.uniqueID = userDoc.userId;
+        telemetry.trackEvent('custom event', { 'TokenUsed' : token});
+        session.send( JSON.stringify(userDoc.history) );
+      }
+    });
+  }
 ]);
 
 
@@ -185,12 +184,13 @@ intents.onDefault([function (session, args, next) {
 
   async.waterfall([
     function(callback) {
-      // If no uniqueID found - create a new one and a new user session, otherwise just grab the userDoc
+      // If no uniqueID found - create a new one and a new user session, otherwise just
+      // grab the userDoc
       if ( !session.userData.uniqueID ) {
         session.userData.uniqueID = uuid.v4();
-        console.log( "Created new user with session ", session.userData.uniqueID );
+        console.log( 'Created new user with session ', session.userData.uniqueID );
       } else {
-        console.log( "Have an existing user with session ", session.userData.uniqueID );
+        console.log( 'Have an existing user with session ', session.userData.uniqueID );
       }
       callback( null, session.userData.uniqueID );
     },
@@ -201,7 +201,7 @@ intents.onDefault([function (session, args, next) {
         if ( err ) {
           callback( err );
         } else {
-          var historyItem = {"question": question, "answer" : result };
+          var historyItem = {'question': question, 'answer' : result };
           callback( null, userId, historyItem );
         }
       });
@@ -211,36 +211,35 @@ intents.onDefault([function (session, args, next) {
       var user = new User( dataDao, userId );
       user.addHistory( historyItem, function( err, status) {
         callback( err, status );
-      })
+      });
     }
   ], function( err, result) {
     if ( err ) {
-      console.log( "Error updating user doc - ", err );
+      console.log( 'Error updating user doc - ', err );
     }
   });
 
 }]);
 
 
-/*
- * This is the 'Was that helpful dialog' getting rid for now
 bot.dialog('/approve', [
-    function (session) {
-       builder.Prompts.confirm(session, 'Was that helpful?', { listStyle: builder.ListStyle.button });
-    },
-    function (session, promptConfirmResult) {
-        var answer = promptConfirmResult.response;
-        telemetry.trackEvent("custom event", { "AnswerHelpful" : answer.toString()});
-        if (answer) {
-          session.send('great! glad I could help!');
-        } else {
-          session.send('oh.. sorry I couldn\'t help... :/');
-        }
-
-        session.endDialog();
+  function (session) {
+    builder.Prompts.confirm(
+      session, 'Was that helpful?', { listStyle: builder.ListStyle.button }
+    );
+  },
+  function (session, promptConfirmResult) {
+    var answer = promptConfirmResult.response;
+    telemetry.trackEvent('custom event', { 'AnswerHelpful' : answer.toString()});
+    if (answer) {
+      session.send('great! glad I could help!');
+    } else {
+      session.send('oh.. sorry I couldn\'t help... :/');
     }
+
+    session.endDialog();
+  }
 ]);
-*/
 
 bot.use({
   botbuilder: function (session, next) {
@@ -258,32 +257,31 @@ module.exports = connector;
 
 function generateToken(args) {
 
-    var text = '';
-    var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  var text = '';
+  var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-    for (var i = 0; i < 3; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (var i = 0; i < 3; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
-    text += '-';
+  text += '-';
 
-    for (var j = 0; j < 3; j++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (var j = 0; j < 3; j++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
-    text += '-';
+  text += '-';
 
-    for (var k = 0; k < 3; k++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (var k = 0; k < 3; k++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
-    return text;
+  return text;
 }
 
 function handleQuestion( session, question, callback ) {
 
-  console.log("qna.get");
   qna.get({ question: question }, function(err, result) {
-
-    console.log(question);
-    console.log(result);
 
     if (err) {
       console.error('Failed to send request to QnAMaker service', err);
@@ -293,27 +291,23 @@ function handleQuestion( session, question, callback ) {
 
     var score = parseInt(result.score);
 
-    var answer = "";
+    var answer = '';
 
     if (score > scoreThreshHold) {
       answer = result.answer;
       sendAnswer({session, answer, origAnswer: answer});
     }
     else if (score > 0) {
-      if (eventSender) {
-      }
 
       answer = 'I\'m not sure, but the answer might be: ' + result.answer;
       sendAnswer({session, answer, origAnswer: result.answer}, (err) => {
         if (!err) {
           // Remove the 'Was that helpful stuff'
-          // session.beginDialog('/approve');
+          session.beginDialog('/approve');
         }
       });
     }
     else {
-      if (eventSender) {
-      }
       answer = 'Sorry, I don\'t know... :/';
       session.send(answer);
     }
@@ -324,18 +318,56 @@ function handleQuestion( session, question, callback ) {
 }
 
 function makeButton(session, text, action) {
-    var button;
+  var button;
 
-    if (action.indexOf("youtube") != -1) {
-      // playVideo doesn't work - just ruins the card
-      button = builder.CardAction.openUrl(session, action, text);
-      //button = builder.CardAction.playVideo(session, action, text);
-    }
-    else {
-      button = builder.CardAction.openUrl(session, action, text);
-    }
+  if (action.indexOf('youtube') !== -1) {
+    // playVideo doesn't work - just ruins the card
+    button = builder.CardAction.openUrl(session, action, text);
+    //button = builder.CardAction.playVideo(session, action, text);
+  }
+  else {
+    button = builder.CardAction.openUrl(session, action, text);
+  }
 
-    return button;
+  return button;
+}
+
+function createVideoMessage(session, metadata) {
+
+  var buttons = [];
+  buttons.push(makeButton(session, metadata.button1Text, metadata.button1Action));
+  buttons.push(makeButton(session, metadata.button2Text, metadata.button2Action));
+  buttons = buttons.filter((x) => { return (x != null); });
+
+  var card = new builder.HeroCard(session)
+  .title('Video')
+  .images([new builder.CardImage(session).url(metadata.mainImage)])
+  .text(metadata.introText)
+  .buttons(buttons);
+
+  if (metadata.answer) {
+    session.send(metadata.answer);
+  }
+
+  return new builder.Message(session).attachments([card]);
+}
+
+function createCarouselMessage(session, metadata) {
+
+  var imgs = metadata.carouselImages.split(',');
+  var text = metadata.carouselText.split('|');
+
+  var cards = [];
+  for (var i in imgs) {
+    var card = new builder.HeroCard(session)
+    .text(text[i])
+    .images([builder.CardImage.create(session, imgs[i])]);
+    cards.push(card);
+  }
+
+  return new builder.Message(session)
+  .attachmentLayout(builder.AttachmentLayout.carousel)
+  .attachments(cards);
 }
 
 function sendAnswer(opts, cb) {
@@ -346,65 +378,39 @@ function sendAnswer(opts, cb) {
   var origAnswer = opts.origAnswer;
 
   metadataClient.get({
-      answer: origAnswer
-    }, (err, metadata) => {
+    answer: origAnswer
+  }, (err, metadata) => {
 
-      if (err) {
-        console.error('error getting metadata for answer', answer, err);
-        return cb(err);
-      }
+    if (err) {
+      console.error('error getting metadata for answer', answer, err);
+      return cb(err);
+    }
 
-      console.log('answer metadata', metadata);
-
-      if (!metadata) {
-        session.send(answer);
-        return cb();
-      }
-
-      if (metadata.action == "RichContent") {
-          session.send(metadata.introText)
-      }
-      else if (metadata.action == "Video") {
-
-          var buttons = [];
-          buttons.push(makeButton(session, metadata.button1Text, metadata.button1Action));
-          buttons.push(makeButton(session, metadata.button2Text, metadata.button2Action));
-          buttons = buttons.filter((x) => { return (x != null); });
-
-          var card = new builder.HeroCard(session)
-          .title("Video")
-          .images([new builder.CardImage(session).url(metadata.mainImage)])
-          .text(metadata.introText)
-          .buttons(buttons);
-
-          if (metadata.answer) {
-            session.send(metadata.answer);
-          }
-
-          var msg = new builder.Message(session).attachments([card]);
-          session.send(msg);
-      }
-      else if (metadata.action == "Carousel") {
-          var imgs = metadata.carouselImages.split(",");
-          var text = metadata.carouselText.split("|");
-
-          var cards = [];
-          for (var i in imgs) {
-            var card = new builder.HeroCard(session)
-            .text(text[i])
-            .images([builder.CardImage.create(session, imgs[i])]);
-            cards.push(card);
-          }
-
-          var msg = new builder.Message(session)
-          .attachmentLayout(builder.AttachmentLayout.carousel)
-          .attachments(cards);
-          session.send(msg);
-      }
-      else {
-        session.send(metadata.answer);
-      }
+    if (!metadata) {
+      session.send(answer);
       return cb();
     }
-  );
+
+    var msg = null;
+
+    if (metadata.action === 'RichContent') {
+      msg = metadata.introText;
+    }
+    else if (metadata.action === 'Video') {
+      msg = createVideoMessage(session, metadata);
+    }
+    else if (metadata.action === 'Carousel') {
+      msg = sendCarouselMessage(session, metadata);
+    }
+    else {
+      // Plain answer
+      msg = metadata.answer;
+    }
+
+    if (msg !== null) {
+      session.send(msg);
+    }
+
+    return cb();
+  });
 }

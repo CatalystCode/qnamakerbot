@@ -1,12 +1,12 @@
 var crypto = require('crypto');
-var Q = require("Q");
+var Q = require('Q');
 
 function Client(opts) {
     var self = this;
 }
 
 Client.prototype.get = function (opts, cb) {
-    
+
     if (!opts.answer) {
       throw new Error('answer is required');
     }
@@ -18,15 +18,15 @@ Client.prototype.get = function (opts, cb) {
 
     // Extract metatdata from the answer
     // There's almost certainly a module that does this
-    var startTag = "[metadata]";
-    var endTag = "[!metadata]";
+    var startTag = '[metadata]';
+    var endTag = '[!metadata]';
     var metaStart = opts.answer.indexOf(startTag);
-    if (metaStart != -1) {
+    if (metaStart !== -1) {
       // Right now we're smuggling this along with the answer,
       // production system should use the metadata capability
       // of the API (once it exists).
       var metaEnd = opts.answer.indexOf(endTag);
-      var meta = opts.answer.slice(metaStart + startTag.length, metaEnd);      
+      var meta = opts.answer.slice(metaStart + startTag.length, metaEnd);
       metadata = JSON.parse(meta);
       metadata.answer = opts.answer.slice(0, metaStart);
     }
@@ -47,9 +47,9 @@ Client.prototype.get = function (opts, cb) {
     */
 
     process.nextTick(() => {
-       console.log("getmetadata - resolve");
+       console.log('getmetadata - resolve');
        return cb(null, metadata);
     });
-}
+};
 
 module.exports.Client = Client;

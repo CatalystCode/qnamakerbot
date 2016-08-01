@@ -3,7 +3,7 @@ var config = require('../config');
 
 
 function getServiceUrl(faq) {
-  if (faq === "BA") {
+  if (faq === 'BA') {
     return config.get('BA_QNA_SERVICE_URL');
   }
   else {
@@ -20,7 +20,7 @@ var qnaClient = new QnAClient({
 });
 
 function getQnAClient(faq) {
-  if (faq === "BA") {
+  if (faq === 'BA') {
     return baQnaClient;
   }
   else {
@@ -38,7 +38,7 @@ if (useMock) {
         score: score
       });
     });
-  }
+  };
 }
 
 module.exports = getQnAClient;

@@ -1,5 +1,5 @@
 process.on('uncaughtException', function (er) {
-  console.error('uncaughtException', er.stack)
+  console.error('uncaughtException', er.stack);
   setTimeout(() => {
     process.exit(1);
   }, 3000);
@@ -36,10 +36,12 @@ function startBot() {
   });
 
   var appInsights = require('./bot/telemetry').appInsights;
-  
+
   server.pre(function(req, res, next) {
     //console.log('REQUEST:', req.url);
-    if (req.method !== 'GET') return next();
+    if (req.method !== 'GET') {
+      return next();
+    }
 
     appInsights.client.trackRequest(req, res);
     return next();
