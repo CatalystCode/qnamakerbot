@@ -384,7 +384,7 @@ function sendAnswer(opts, cb) {
       msg = createVideoMessage(session, metadata);
     }
     else if (metadata.action === 'Carousel') {
-      msg = sendCarouselMessage(session, metadata);
+      msg = createCarouselMessage(session, metadata);
     }
     else {
       // Plain answer
