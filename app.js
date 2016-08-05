@@ -1,51 +1,40 @@
-process.on('uncaughtException', function (er) {
-  console.error('uncaughtException', er.stack);
-  setTimeout(() => {
-    process.exit(1);
-  }, 3000);
-});
+"use strict";
 
 var restify = require('restify');
-var log = require('./log');
+var botbuilder = require('botbuilder');
 
-if (log.config.enabled) {
-  log.init({
-    domain: process.env.COMPUTERNAME || '',
-    instanceId: log.getInstanceId(),
-    app: 'airbots',
-    level: log.config.level,
-    transporters: log.config.transporters
-  }, function(err) {
-    if (err) {
-      return console.error(err);
-    }
-    console.log('starting bot...');
-    startBot();
-  });
-} else {
-  startBot();
+function createConsoleConnector() {
+  console.log("Hi.. ask me a question!");
+  return new botbuilder.ConsoleConnector().listen();
 }
 
+function createChatConnector() {
 
-function startBot() {
+  var config = require('nconf').env().file({ file: './localConfig.json' });
 
-  // Setup Restify Server
+  var opts = {
+    appId: config.get('MICROSOFT_APP_ID'),
+    appPassword: config.get('MICROSOFT_APP_PASSWORD')
+  };
+
+  var chatConnector = new botbuilder.ChatConnector(opts);
+
+  // Create http server
   var server = restify.createServer();
   server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
   });
 
-  var appInsights = require('./bot/telemetry').appInsights;
+  server.post('/qna', chatConnector.listen());
 
-  server.pre(function(req, res, next) {
-    if (req.method !== 'GET') {
-      return next();
-    }
+  return chatConnector;
+}
 
-    appInsights.client.trackRequest(req, res);
-    return next();
-  });
+function main() {
+  var connector = createConsoleConnector();
+  var bot = require('./lib/qnabot_minimal.js')(connector);
+}
 
-  var botConnector = require('./bot');
-  server.post('/api/messages', botConnector.listen());
+if (require.main === module) {
+  main();
 }

@@ -1,23 +1,23 @@
-# airbots
-Repo for ongoing work with customer
+# QnA Maker - Minimal Bot example
 
+Minimalist demonstration of integrating the [QnA Maker](http://qnamaker.botframework.com).
 
-### trying QnA Maker Client Locally
+The app default to a CLI. If you wish to integrate this into a supported channel you'll need to:
 
+ - Create a [new bot](https://dev.botframework.com/bots/new)
+ - Deploy your bot to a publicly accesible URI (or use a tool like [ngrok](https://ngrok.com/) to
+make your dev machine publicly available)
+ - Create localConfig.json in the root directory of this app containing the following:
 ```
-cd qnamaker-testapp
-npm install
-npm start
+  {
+    "MICROSOFT_APP_ID" : "--INSERT-YOUR-APP-ID-HERE--",
+    "MICROSOFT_APP_PASSWORD" : "--INSERT-YOUR-APP-PASSWORD-HERE--"
+  }
+
+(these value are generated as part of the bot creation process)
 ```
+ - Configure at least one channel to be able to access your bot.
 
-### BOT entry point
 
-Bot is defined in app.js.
 
-Do a npm install --no-optional which will install two main dependencies which are restify and botbuilder.
 
-Set appid and password on command line. Check app.js for exact names.
-
-Then just node app.js or npm start should start application on port 3978.
-
-You can use bot framework emulator(on windows) or mono emulator on macos to communicate with the bot.
