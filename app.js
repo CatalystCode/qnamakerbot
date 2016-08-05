@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
 var restify = require('restify');
 var botbuilder = require('botbuilder');
 
 function createConsoleConnector() {
-  console.log("Hi.. ask me a question!");
+  console.log('Hi.. ask me a question!');
   return new botbuilder.ConsoleConnector().listen();
 }
 
