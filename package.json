@@ -1,7 +1,7 @@
 {
-  "name": "airbots",
+  "name": "QnaBot",
   "version": "1.0.0",
-  "description": "FAQ Bot for 19th July",
+  "description": "Minimal integration of QnA Maker service with Microsoft Bot Framework",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
