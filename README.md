@@ -15,8 +15,8 @@ make your dev machine publicly available)
     "MICROSOFT_APP_PASSWORD" : "--INSERT-YOUR-APP-PASSWORD-HERE--"
   }
 
-(these value are generated as part of the bot creation process)
 ```
+(these values are generated as part of the bot creation process)
  - Configure at least one channel to be able to access your bot.
 
 
