@@ -19,6 +19,3 @@ make your dev machine publicly available)
 (these values are generated as part of the bot creation process)
  - Configure at least one channel to be able to access your bot.
 
-
-
-
