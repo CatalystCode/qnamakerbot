@@ -5,6 +5,7 @@ var querystring = require('querystring');
 
 var restify = require('restify');
 var botbuilder = require('botbuilder');
+var intents = new botbuilder.IntentDialog();
 var config = require('nconf').env().argv().file({ file: './localConfig.json' });
 
 function createConsoleConnector() {
@@ -47,6 +48,7 @@ function qna(q, cb) {
 }
 
 function main() {
+
   var connector = config.get('console') ? createConsoleConnector() : createChatConnector();
   var bot = new botbuilder.UniversalBot(connector);
 
