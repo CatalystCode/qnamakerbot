@@ -1,5 +1,5 @@
 {
-  "name": "QnaBot",
+  "name": "QnaMakerBot",
   "version": "1.0.0",
   "description": "Minimal integration of QnA Maker service with Microsoft Bot Framework",
   "main": "app.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CatalystCode/airbots.git"
+    "url": "git+https://github.com/CatalystCode/qnamakerbot.git"
   },
   "author": "pctuk",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CatalystCode/airbots/issues"
+    "url": "https://github.com/CatalystCode/qnamakerbot/issues"
   },
-  "homepage": "https://github.com/CatalystCode/airbots#readme",
+  "homepage": "https://github.com/CatalystCode/qnamakerbot#readme",
   "dependencies": {
     "botbuilder": "^3.1.1",
     "nconf": "^0.8.4",
