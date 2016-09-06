@@ -5,7 +5,6 @@ var querystring = require('querystring');
 
 var restify = require('restify');
 var botbuilder = require('botbuilder');
-var intents = new botbuilder.IntentDialog();
 var config = require('nconf').env().argv().file({ file: './localConfig.json' });
 
 function createConsoleConnector() {
@@ -15,14 +14,14 @@ function createConsoleConnector() {
 
 function createChatConnector() {
 
-  var opts = {
+  let opts = {
     appId: config.get('MICROSOFT_APP_ID'),
     appPassword: config.get('MICROSOFT_APP_PASSWORD')
   };
 
-  var chatConnector = new botbuilder.ChatConnector(opts);
+  let chatConnector = new botbuilder.ChatConnector(opts);
 
-  var server = restify.createServer();
+  let server = restify.createServer();
   server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
   });
@@ -49,22 +48,36 @@ function qna(q, cb) {
 
 function main() {
 
-  var connector = config.get('console') ? createConsoleConnector() : createChatConnector();
-  var bot = new botbuilder.UniversalBot(connector);
+  let connector = config.get('console') ? createConsoleConnector() : createChatConnector();
+  let bot = new botbuilder.UniversalBot(connector);
+  let intents = new botbuilder.IntentDialog();
 
-  bot.dialog('/', [
-    (session, args, next) => {
-      qna(session.message.text, (err, result) => {
-        if (err) {
-          console.error(err);
-          session.send('Unfortunately an error occurred. Try again.');
-        }
-        else {
-          session.send(JSON.parse(result).answer);
-        }
-      });
+  intents.matches(/^(\/history)/i, [
+    function (session) {
+      session.send(session.userData.history.join('\n'));
+      return
     }
   ]);
+
+  intents.onDefault((session, args, next) => {
+
+    if (!('history' in session.userData)) {
+      session.userData.history = [];
+    }
+    session.userData.history.push(session.message.text);
+
+    qna(session.message.text, (err, result) => {
+      if (err) {
+        console.error(err);
+        session.send('Unfortunately an error occurred. Try again.');
+      }
+      else {
+        session.send(JSON.parse(result).answer);
+      }
+    });
+  });
+
+  bot.dialog('/', intents);
 }
 
 if (require.main === module) {
