@@ -62,4 +62,27 @@ Out of the box you get 2 channels set up without any messing around every time y
 
 What you'll soon start to figure out though is that identities aren't magically linked in any way. That's not a fault of the Bot Framework, it's just a normal consequence of a user's expectation of privacy. If this is a problem for your application you'll have to persuade the user to help you link their ids together, possibly adding a mapping to your own app's concept of id along the way. 
 
-A simple way of doing this is to just generate some unique token identifier for the user that if pasted into some other channel allows you to link the two identities (I wouldn't recommend using a user id directly as that could constitute a security risk). Not super elegant but it works. Perhaps we'll see better solutions the bots become more mainstream and users expect context to follow them around more.
+A simple way of doing this is to just generate some unique token identifier for the user that if pasted into some other channel allows you to link the two identities (I wouldn't recommend using a user id directly as that could constitute a security risk).
+
+```javascript
+  let token = uuid.v4();
+
+  let values = [
+    session.message.user.id, 
+    session.message.user.name, 
+    token, 
+    JSON.stringify(session.userData.history)
+  ];
+
+  // Create a record for ourselves
+  db.run('insert into users values(\'' + values.join('\',\'') + '\')');
+
+  session.send('Transferring you..\nClick on the link to transfer to the web chat');
+  session.send('http://localhost:3978');
+  session.send('Paste the following token in the web chat to link your channel ids:');
+  session.send(token);
+```
+
+To see this in action just type **//goto** (double-slashes required) in the Skype channel. You'll be prompted to click the link to take you to the webchat being served from your localhost. Paste the token into the webchat and you'll see what the bot knows already knows about you.
+
+Not super elegant but it works. Perhaps we'll see better solutions the bots become more mainstream and users expect context to follow them around more.
