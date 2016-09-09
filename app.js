@@ -3,15 +3,12 @@
 var uuid = require('node-uuid');
 var request = require('request');
 var querystring = require('querystring');
+var sqlite3 = require('sqlite3').verbose();
+var db = new sqlite3.Database(':memory:');
 
 var restify = require('restify');
 var botbuilder = require('botbuilder');
 var config = require('nconf').env().argv().file({ file: './localConfig.json' });
-
-function createConsoleConnector() {
-  console.log('Hi.. ask me about the Microsoft Bot Framework.');
-  return new botbuilder.ConsoleConnector().listen();
-}
 
 function createChatConnector() {
 
@@ -56,28 +53,54 @@ function initialiseBot(bot) {
 
   let intents = new botbuilder.IntentDialog();
 
-  intents.matches(/^(\/history)/i, [
+  intents.matches(/^(\/\/history)/i, [
     function (session) {
       session.send(session.userData.history.join('\n'));
       return
     }
   ]);
 
-  intents.matches(/^(\/goto)/i, [
+  intents.matches(/^(\/\/goto)/i, [
     function (session) {
-      session.send("Transferring you..");
-      session.send("Click on the link to transfer to the web chat");
+
+      if (session.message.address.channelId != 'skype') {
+        session.send('Sorry.. I only support Skype->Webchat transfers');
+        return;
+      }
+
+      let token = uuid.v4();
+
+      let values = [
+        session.message.user.id, 
+        session.message.user.name, 
+        token, 
+        JSON.stringify(session.userData.history)
+      ];
+
+      db.run('insert into users values(\'' + values.join('\',\'') + '\')');
+
+      session.send("Transferring you..\nClick on the link to transfer to the web chat");
       session.send('http://localhost:3978');
-      session.send("When prompted, use the following token to identify yourself:");
-      let uid = uuid.v4();
-      session.send(uid);
-      return
+      session.send("Paste the following token in the web chat to link your channel ids:");
+      session.send(token);
     }
   ]);
 
-  intents.matches(/^(\/firstRun)/i, [
-    function (session) {
-      botbuilder.Prompts.text(session, "Hello... What's your name?");
+  intents.matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, [
+    function(session) {
+      let stmt = 'select * from users where token = \'' + session.message.text + '\'';
+      db.get(stmt, (err, row) => {
+        if (err || row === undefined) {
+          session.send("Sorry.. that token didn't match anything in my database");
+        }
+        else {
+          session.send("Found a match");
+          session.send("Your userId in the Skype chat is: " + row.uid);
+          session.send("Your userId in this chat is is: " + session.message.user.id);
+          session.send("Skype knows you as: " + row.name);
+          session.send('And the last few things you typed in Skype were:' + row.history);
+        }
+      });
     }
   ]);
 
@@ -101,18 +124,15 @@ function initialiseBot(bot) {
   });
 
   bot.dialog('/', intents);
+}
 
-  bot.on('conversationUpdate', function (message) {
-  //  console.log(message);
-  });
-  bot.on('message', function (message) {
-  //  console.log(message);
-  });
+function initialiseStorage() {
+  db.run('create table users (uid text, name text, token text, history text)');
 }
 
 function main() {
+  initialiseStorage();
   initialiseBot(new botbuilder.UniversalBot(createChatConnector()));
-  initialiseBot(new botbuilder.UniversalBot(createConsoleConnector()));
 }
 
 if (require.main === module) {
