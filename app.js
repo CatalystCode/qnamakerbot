@@ -56,14 +56,14 @@ function initialiseBot(bot) {
   intents.matches(/^(\/\/history)/i, [
     function (session) {
       session.send(session.userData.history.join('\n'));
-      return
+      return;
     }
   ]);
 
   intents.matches(/^(\/\/goto)/i, [
     function (session) {
 
-      if (session.message.address.channelId != 'skype') {
+      if (session.message.address.channelId !== 'skype') {
         session.send('Sorry.. I only support Skype->Webchat transfers');
         return;
       }
@@ -79,9 +79,9 @@ function initialiseBot(bot) {
 
       db.run('insert into users values(\'' + values.join('\',\'') + '\')');
 
-      session.send("Transferring you..\nClick on the link to transfer to the web chat");
+      session.send('Transferring you..\nClick on the link to transfer to the web chat');
       session.send('http://localhost:3978');
-      session.send("Paste the following token in the web chat to link your channel ids:");
+      session.send('Paste the following token in the web chat to link your channel ids:');
       session.send(token);
     }
   ]);
@@ -91,13 +91,13 @@ function initialiseBot(bot) {
       let stmt = 'select * from users where token = \'' + session.message.text + '\'';
       db.get(stmt, (err, row) => {
         if (err || row === undefined) {
-          session.send("Sorry.. that token didn't match anything in my database");
+          session.send('Sorry.. that token didn\'t match anything in my database');
         }
         else {
-          session.send("Found a match");
-          session.send("Your userId in the Skype chat is: " + row.uid);
-          session.send("Your userId in this chat is is: " + session.message.user.id);
-          session.send("Skype knows you as: " + row.name);
+          session.send('Found a match');
+          session.send('Your userId in the Skype chat is: ' + row.uid);
+          session.send('Your userId in this chat is is: ' + session.message.user.id);
+          session.send('Skype knows you as: ' + row.name);
           session.send('And the last few things you typed in Skype were:' + row.history);
         }
       });
