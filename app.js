@@ -12,6 +12,9 @@ var uuid = require('node-uuid');
 var request = require('request');
 var querystring = require('querystring');
 var sqlite3 = require('sqlite3').verbose();
+
+// !!! Don't use sqllite or in-memory databases for this in real life.
+// Your bot application could be running across multple servers !!!! 
 var db = new sqlite3.Database(':memory:');
 
 var restify = require('restify');
