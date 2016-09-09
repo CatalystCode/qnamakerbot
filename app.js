@@ -80,6 +80,8 @@ function initialiseBot(bot) {
   // Use IntentDialog to watch for messages that match regexes
   let intents = new botbuilder.IntentDialog();
 
+  // Note: This is a double-slash // since single slashes
+  // are intercepted as channel commands by Skype
   intents.matches(/^(\/\/history)/i, [
     function (session) {
       // Just dump the user's message history
