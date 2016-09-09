@@ -1,7 +1,7 @@
 {
-  "name": "airbots",
+  "name": "QnaMakerBot",
   "version": "1.0.0",
-  "description": "FAQ Bot for 19th July",
+  "description": "Minimal integration of QnA Maker service with Microsoft Bot Framework",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,29 +9,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CatalystCode/airbots.git"
+    "url": "git+https://github.com/CatalystCode/qnamakerbot.git"
   },
   "author": "pctuk",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CatalystCode/airbots/issues"
+    "url": "https://github.com/CatalystCode/qnamakerbot/issues"
   },
-  "homepage": "https://github.com/CatalystCode/airbots#readme",
+  "homepage": "https://github.com/CatalystCode/qnamakerbot#readme",
   "dependencies": {
-    "applicationinsights": "^0.15.17",
-    "async": "^2.0.0",
-    "azure-event-hubs": "0.0.2",
-    "azure-logging": "^0.3.2",
-    "botbuilder": "3.0.1",
-    "documentdb": "^1.9.0",
-    "moment": "^2.14.1",
+    "azure-storage": "^1.3.0",
+    "botbuilder": "^3.1.1",
     "nconf": "^0.8.4",
     "node-uuid": "^1.4.7",
-    "node-xlsx": "^0.7.1",
-    "q": "^1.4.1",
-    "qnamaker-client": "git+https://git@github.com/CatalystCode/qnamaker-client.git",
+    "request": "^2.74.0",
     "restify": "4.1.1",
-    "striptags": "^2.1.1"
+    "sqlite3": "^3.1.4"
   },
   "devDependencies": {
     "node-style-guide": "^1.0.0"
