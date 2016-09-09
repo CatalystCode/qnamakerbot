@@ -23,7 +23,7 @@ It's a pretty powerful service, I think, and addresses one of the most common us
 interfaces which is the automated servicing of the most commonly asked questions to customer 
 helpdesks.
 
-#### Calling from a Bot interface
+## Calling from a Bot interface
 
 Couldn't be easier really, just pass any message we think is a question straight to our QnA endpoint and show the user what comes back. Of course we can get as complex as we like here, adding metadata to the answer for instance to influence whether we show [Cards](https://docs.botframework.com/en-us/node/builder/chat-reference/classes/_botbuilder_d_.herocard.html) or other fancy stuff but the 
 simplest implementation is just to make the request and display the response.
@@ -33,7 +33,7 @@ For the purposes of this demo we've pre-trained a QnA Maker service on the exist
 FAQ-style content you want. Just rememember the change the qnaUri setting in localConfig.json 
 to point your own endpoint.
 
-##### Setting up your new Bot
+### Setting up your new Bot
 
  - Clone this repo, natch!!
  - Create a [new bot](https://dev.botframework.com/bots/new). Make sure you copy the app password as this is the /only/ time you'll get to see it.
@@ -45,7 +45,7 @@ make your dev machine publicly available) and configure the bot's Messaging Endp
 
 And that's it.. you should now be able to ask the Bot in your Skype chat anything you like about the Microsoft Bot Framework.
 
-###### Channel Transfer ??
+## Channel Transfer ??
 
 Out of the box you get 2 channels set up without any messing around every time you set up a new bot. Skype and the WebChat. With a little more messing around you can get a whole bunch more. What you'll soon start to figure out though is that none of your identities in these channels are linked in any way. That's not a fault of the Bot Framework, it's just that we can't magically know that the username you use for Slack, say, and your name on Skype are in any way related. 
 
