@@ -1,5 +1,5 @@
 {
   "qnaUri" : "http://qnaservice.cloudapp.net/KBService.svc/GetAnswer?kbId=a3dae93561d24529b11a4c0eb8acd444&question=",
-  "BOT_APP_ID" : "57642531-9703-427a-bb9a-9359b56d5377",
-  "BOT_APP_PASSWORD" : "dKwVLdSsc65PyGJFySBnBEp"
+  "BOT_APP_ID" : "<YOUR_APP_ID_HERE>",
+  "BOT_APP_PASSWORD" : "<YOUR_APP_PASSWORD_HERE>"
 }
