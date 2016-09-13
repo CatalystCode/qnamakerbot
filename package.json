@@ -20,10 +20,8 @@
   "dependencies": {
     "botbuilder": "^3.1.1",
     "nconf": "^0.8.4",
-    "node-uuid": "^1.4.7",
     "request": "^2.74.0",
     "restify": "4.1.1",
-    "sqlite3": "^3.1.4"
   },
   "devDependencies": {
     "node-style-guide": "^1.0.0"
